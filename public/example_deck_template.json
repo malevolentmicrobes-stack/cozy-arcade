@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "schema": "cozy-arcade-v1",
+    "version": "v17",
+    "description": "Example deck — 2 cards from MGH Whitebook. Use this as a template for your own JSON import.",
+    "total": 2,
+    "source": "MGH Whitebook APKG (demo only)",
+    "required_fields": [
+      "id",
+      "sys",
+      "diagnosis",
+      "prompt",
+      "one_thing"
+    ],
+    "optional_fields": [
+      "board_trigger",
+      "level_1",
+      "level_2",
+      "level_3_recall",
+      "level_3_treatment",
+      "level_3_next_step",
+      "tags",
+      "image_url"
+    ]
+  },
+  "cards": [
+    {
+      "id": "APKG-99-001",
+      "sys": "MGH",
+      "diagnosis": "2-2.4 inches",
+      "prompt": "What is the recommended depth for compressions in cardiac arrest?",
+      "one_thing": "2-2.4 inches",
+      "board_trigger": "IF What is the recommended depth for compressions in cardiac arrest? → THINK 2-2.4 inches → REVIEW objective",
+      "level_1": "What is the recommended depth for compressions in cardiac arrest?",
+      "level_2": "2-2.4 inches",
+      "level_3_recall": "2-2.4 inches\n\n2-2.4 inches",
+      "level_3_treatment": null,
+      "level_3_next_step": null,
+      "tags": "MGH WHITEBOOK, APKG, FIRST 99",
+      "image_url": null
+    },
+    {
+      "id": "APKG-99-002",
+      "sys": "MGH",
+      "diagnosis": "100-120 beats per minute",
+      "prompt": "What is the recommended compression rate in cardiac arrest?",
+      "one_thing": "100-120 beats per minute",
+      "board_trigger": "IF What is the recommended compression rate in cardiac arrest? → THINK 100-120 beats per minute → REVIEW objective",
+      "level_1": "What is the recommended compression rate in cardiac arrest?",
+      "level_2": "100-120 beats per minute",
+      "level_3_recall": "100-120 beats per minute\n\n100-120 beats per minute",
+      "level_3_treatment": null,
+      "level_3_next_step": null,
+      "tags": "MGH WHITEBOOK, APKG, FIRST 99",
+      "image_url": null
+    }
+  ]
+}

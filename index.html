@@ -7879,11 +7879,21 @@ button#homeTopBtn,.homeTopBtn{display:none!important;visibility:hidden!important
   function answerFor352(card){
     return card && (card.diagnosis || card.answer || card.dx);
   }
+  const SYS_ALIAS_MAP_352 = {
+    'Cardiovascular Sys':'CV',
+    'Endocrine, Diabete':'ENDO',
+    'Ear, Nose & Throat':'ENT',
+    'Gastrointestinal &':'GI',
+    'Biostatistics & Ep':'BIOSTATS'
+  };
+  function normalizeSysValue352(value){
+    const sys = cleanText352(value);
+    if(!sys || /^undefined|null$/i.test(sys)) return 'UNSPECIFIED';
+    return SYS_ALIAS_MAP_352[sys] || sys;
+  }
   function systemOf352(card){
     const raw = card && (card.system || card.sys || card.subject || card.subspecialty || '');
-    const sys = cleanText352(raw);
-    if(!sys || /^undefined|null$/i.test(sys)) return 'UNSPECIFIED';
-    return sys;
+    return normalizeSysValue352(raw);
   }
   function normalizeCardFields352(card){
     if(!card || typeof card !== 'object') return card;
@@ -8798,6 +8808,264 @@ button#homeTopBtn,.homeTopBtn{display:none!important;visibility:hidden!important
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+})();
+</script>
+<style id="public-deck-source-css">
+  .deckSourcePublic{margin-top:18px;border:1px solid rgba(103,232,249,.24);border-radius:18px;background:rgba(103,232,249,.05);padding:16px;color:#edf7ff}
+  .deckSourcePublic h2{margin:0 0 12px;font-family:Orbitron,'DM Sans',sans-serif;font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:#bffbff}
+  .deckSourcePublic .deckOptionsPublic{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+  .deckSourcePublic label{display:block;font-weight:900;color:#edf7ff}
+  .deckSourcePublic input[type="radio"]{width:auto!important;margin-right:8px;vertical-align:middle}
+  .deckSourcePublic .deckDropPublic{border:1px dashed rgba(103,232,249,.45);border-radius:14px;background:rgba(2,8,20,.56);padding:14px;text-align:center;font-weight:900;color:#dffaff}
+  .deckSourcePublic .deckDropPublic.drag{border-color:#67e8f9;background:rgba(103,232,249,.12)}
+  .deckSourcePublic .deckUrlRowPublic{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}
+  .deckSourcePublic input[type="url"],.deckSourcePublic input[type="file"]{width:100%;border-radius:12px;border:1px solid rgba(103,232,249,.24);background:#040816;color:#fff;padding:11px}
+  .deckSourcePublic .deckStatusPublic{margin-top:10px;color:#cbd7ef;font-weight:850;line-height:1.35}
+  @media(max-width:760px){.deckSourcePublic .deckOptionsPublic,.deckSourcePublic .deckUrlRowPublic{grid-template-columns:1fr}}
+</style>
+<script id="public-deck-source-js">
+(function(){
+  const CUSTOM_DECK_KEY = 'custom_deck';
+  const SYS_ALIAS_PUBLIC = {
+    'Cardiovascular Sys':'CV',
+    'Endocrine, Diabete':'ENDO',
+    'Ear, Nose & Throat':'ENT',
+    'Gastrointestinal &':'GI',
+    'Biostatistics & Ep':'BIOSTATS'
+  };
+  const $p = id => document.getElementById(id);
+  const builtInCardsPublic = (() => {
+    try{ if(Array.isArray(cards)) return cards.slice(); }catch(_){}
+    try{ if(typeof DATA !== 'undefined' && Array.isArray(DATA.cards)) return DATA.cards.slice(); }catch(_){}
+    return [];
+  })();
+
+  function cleanPublic(value){
+    return String(value == null ? '' : value).replace(/\s+/g,' ').trim();
+  }
+  function escPublic(value){
+    return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+  function normalizeSysPublic(value){
+    const sys = cleanPublic(value);
+    if(!sys || /^undefined|null$/i.test(sys)) return 'UNSPECIFIED';
+    return SYS_ALIAS_PUBLIC[sys] || sys;
+  }
+  function rawCardsPublic(payload){
+    if(Array.isArray(payload)) return payload;
+    if(payload && Array.isArray(payload.cards)) return payload.cards;
+    if(payload && Array.isArray(payload.notes)) return payload.notes;
+    return [];
+  }
+  function normalizeCardPublic(card, i){
+    const c = Object.assign({}, card || {});
+    const front = cleanPublic(c.prompt || c.presentation || c.presentation_CLEAN || c.front || c.question || c.clinical_vignette_summary || c.level_1 || c.level_1_presentation);
+    const reveal = cleanPublic(c.one_thing || c.answer || c.reveal || c.educational_objective || c.educational_obj || c.level_2 || c.level_3_recall || c.quick_recall);
+    const title = cleanPublic(c.diagnosis || c.title || c.dx || c.answer_choice || reveal || ('Imported card ' + (i + 1)));
+    const sys = normalizeSysPublic(c.sys || c.system || c.subject || c.subspecialty || 'CUSTOM');
+    let tags = c.tags;
+    if(typeof tags === 'string') tags = tags.split(/[|;,]/);
+    if(!Array.isArray(tags)) tags = [];
+    tags = tags.map(cleanPublic).filter(Boolean);
+    if(sys && sys !== 'UNSPECIFIED' && !tags.includes(sys)) tags.unshift(sys);
+    c.id = cleanPublic(c.id || c.qid || (i + 1));
+    c.qid = cleanPublic(c.qid || c.id);
+    c.sys = sys;
+    c.system = sys;
+    c.subject = c.subject || sys;
+    c.diagnosis = title;
+    c.prompt = front;
+    c.presentation = front;
+    c.clinical_vignette_summary = c.clinical_vignette_summary || front;
+    c.level_1_presentation = c.level_1_presentation || c.level_1 || front;
+    c.one_thing = c.one_thing || reveal || title;
+    c.answer = c.answer || reveal || c.one_thing;
+    c.educational_objective = c.educational_objective || c.educational_obj || reveal || c.one_thing || title;
+    c.quick_recall = c.quick_recall || c.level_3_recall || c.educational_objective;
+    c.level_2_three_second_exposure = c.level_2_three_second_exposure || c.level_2 || c.one_thing || c.educational_objective;
+    c.tags = tags;
+    return c;
+  }
+  function normalizeDeckPublic(payload){
+    return rawCardsPublic(payload).map(normalizeCardPublic).filter(c => cleanPublic(c.prompt) && cleanPublic(c.one_thing || c.answer || c.educational_objective));
+  }
+  function setDeckPublic(deck, sourceLabel, persistPayload){
+    const incoming = normalizeDeckPublic(deck);
+    if(!incoming.length) throw new Error('No cards found');
+    try{ cards = incoming; }catch(_){}
+    try{
+      if(typeof DATA !== 'undefined'){
+        DATA.cards = incoming;
+        DATA.metadata = Object.assign({}, DATA.metadata || {}, {deck_source:sourceLabel, cards_embedded:incoming.length});
+        window.DATA = DATA;
+      }
+    }catch(_){}
+    try{ index = 0; current = null; choices = []; selected = 0; }catch(_){}
+    try{ if(typeof populateSystemFilters352 === 'function') populateSystemFilters352(); }catch(_){}
+    try{ if(typeof patchStudyOptions === 'function') patchStudyOptions(); }catch(_){}
+    try{ if(typeof installHomeActions === 'function') installHomeActions(); }catch(_){}
+    try{ if(typeof updateKpis === 'function') updateKpis(); }catch(_){}
+    if(persistPayload){
+      const saved = {meta:Object.assign({}, deck.meta || deck.metadata || {}, {source:sourceLabel, saved_at:new Date().toISOString(), total:incoming.length}), cards:incoming};
+      localStorage.setItem(CUSTOM_DECK_KEY, JSON.stringify(saved));
+    }
+    document.documentElement.dataset.deckSourcePublic = sourceLabel === 'Built-in ABIM deck' ? 'builtin' : 'custom';
+    refreshDeckSourceUI();
+    return incoming.length;
+  }
+  function useBuiltInDeckPublic(clearStorage){
+    if(clearStorage) localStorage.removeItem(CUSTOM_DECK_KEY);
+    const payload = {meta:{source:'Built-in ABIM deck', total:builtInCardsPublic.length}, cards:builtInCardsPublic};
+    return setDeckPublic(payload, 'Built-in ABIM deck', false);
+  }
+  function readFileDeckPublic(file){
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const payload = JSON.parse(String(reader.result || '{}'));
+        const count = setDeckPublic(payload, file.name || 'Uploaded JSON file', true);
+        try{ if(typeof toast === 'function') toast('Custom deck loaded: ' + count + ' cards'); }catch(_){}
+      }catch(err){
+        try{ if(typeof toast === 'function') toast('Deck import failed'); }catch(_){}
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+  }
+  async function fetchDeckPublic(url){
+    const res = await fetch(url, {cache:'no-store'});
+    if(!res.ok) throw new Error('Fetch failed: ' + res.status);
+    const payload = await res.json();
+    const count = setDeckPublic(payload, url, true);
+    try{ if(typeof toast === 'function') toast('Custom deck loaded: ' + count + ' cards'); }catch(_){}
+  }
+  function activeCountPublic(){
+    try{ if(Array.isArray(cards)) return cards.length; }catch(_){}
+    return 0;
+  }
+  function activeSourcePublic(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(CUSTOM_DECK_KEY) || 'null');
+      if(saved && Array.isArray(saved.cards)) return (saved.meta && saved.meta.source) || 'Custom deck';
+    }catch(_){}
+    return 'Built-in ABIM deck';
+  }
+  function refreshDeckSourceUI(){
+    const status = $p('deckSourceStatusPublic');
+    if(status) status.textContent = 'Active source: ' + activeSourcePublic() + ' / ' + activeCountPublic() + ' cards';
+    const custom = activeSourcePublic() !== 'Built-in ABIM deck';
+    const builtin = $p('deckSourceBuiltinPublic');
+    const upload = $p('deckSourceUploadPublic');
+    const url = $p('deckSourceUrlPublic');
+    if(builtin) builtin.checked = !custom;
+    if(upload) upload.checked = custom;
+    if(url) url.checked = false;
+    sanitizeSystemSelectsPublic();
+  }
+  function sanitizeSystemSelectsPublic(){
+    const systemIds = new Set(['browseSystem351','homeSystem175155','reviewSystem352']);
+    document.querySelectorAll('select').forEach(select => {
+      const label = select.closest('.field,div,section')?.querySelector('label')?.textContent || '';
+      if(!systemIds.has(select.id) && !/system/i.test(label)) return;
+      const seen = new Set();
+      [...select.options].forEach(option => {
+        const mapped = normalizeSysPublic(option.textContent || option.value);
+        if(mapped && mapped !== 'UNSPECIFIED' && option.value !== 'all'){
+          option.textContent = mapped;
+          option.value = mapped;
+        }
+        const key = String(option.value || option.textContent || '').toUpperCase();
+        if(seen.has(key)) option.remove();
+        else seen.add(key);
+      });
+    });
+  }
+  function ensureDeckSourceUI(){
+    const box = $p('settings') && $p('settings').querySelector('.box');
+    if(!box || $p('deckSourcePublic')) return;
+    const panel = document.createElement('section');
+    panel.id = 'deckSourcePublic';
+    panel.className = 'deckSourcePublic';
+    panel.innerHTML = '<h2>YOUR DECK SOURCE</h2>' +
+      '<div class="deckOptionsPublic">' +
+      '<label><input id="deckSourceBuiltinPublic" name="deckSourcePublic" type="radio" value="builtin"> Built-in ABIM deck</label>' +
+      '<label><input id="deckSourceUploadPublic" name="deckSourcePublic" type="radio" value="upload"> Upload JSON file</label>' +
+      '<label><input id="deckSourceUrlPublic" name="deckSourcePublic" type="radio" value="url"> Paste JSON URL</label>' +
+      '</div>' +
+      '<div id="deckDropPublic" class="deckDropPublic">Drop JSON here or choose a file<input id="deckFilePublic" type="file" accept=".json,application/json"></div>' +
+      '<div class="deckUrlRowPublic"><input id="deckUrlInputPublic" type="url" placeholder="https://example.com/deck.json"><button id="deckUrlLoadPublic" type="button" class="btn primary">Load URL</button></div>' +
+      '<div class="controls"><button id="deckClearPublic" type="button" class="btn red">Clear custom deck</button></div>' +
+      '<div id="deckSourceStatusPublic" class="deckStatusPublic"></div>';
+    const anchor = $p('settingsProgress351') || box.querySelector('.controls');
+    (anchor || box).insertAdjacentElement(anchor ? 'beforebegin' : 'beforeend', panel);
+    const fileInput = $p('deckFilePublic');
+    fileInput.onchange = e => readFileDeckPublic(e.target.files && e.target.files[0]);
+    const drop = $p('deckDropPublic');
+    drop.addEventListener('dragover', e => {e.preventDefault(); drop.classList.add('drag');});
+    drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+    drop.addEventListener('drop', e => {e.preventDefault(); drop.classList.remove('drag'); readFileDeckPublic(e.dataTransfer.files && e.dataTransfer.files[0]);});
+    $p('deckSourceBuiltinPublic').onchange = () => useBuiltInDeckPublic(true);
+    $p('deckSourceUploadPublic').onchange = () => fileInput.click();
+    $p('deckSourceUrlPublic').onchange = () => $p('deckUrlInputPublic').focus();
+    $p('deckUrlLoadPublic').onclick = async () => {
+      try{ await fetchDeckPublic($p('deckUrlInputPublic').value.trim()); }
+      catch(err){ console.error(err); try{ if(typeof toast === 'function') toast('URL deck load failed'); }catch(_){} }
+    };
+    $p('deckClearPublic').onclick = () => {
+      const count = useBuiltInDeckPublic(true);
+      try{ if(typeof toast === 'function') toast('Custom deck cleared: ' + count + ' built-in cards'); }catch(_){}
+    };
+    refreshDeckSourceUI();
+  }
+  function normalizeAllSysPublic(){
+    try{
+      (cards || []).forEach(c => {
+        const sys = normalizeSysPublic(c.system || c.sys || c.subject || c.subspecialty || '');
+        c.system = sys;
+        c.sys = sys;
+        if(!c.subject) c.subject = sys;
+      });
+    }catch(_){}
+    try{
+      if(typeof DATA !== 'undefined' && Array.isArray(DATA.cards)){
+        DATA.cards.forEach(c => {
+          const sys = normalizeSysPublic(c.system || c.sys || c.subject || c.subspecialty || '');
+          c.system = sys;
+          c.sys = sys;
+          if(!c.subject) c.subject = sys;
+        });
+      }
+    }catch(_){}
+  }
+  function bootPublicDeckSource(){
+    normalizeAllSysPublic();
+    sanitizeSystemSelectsPublic();
+    try{
+      const saved = JSON.parse(localStorage.getItem(CUSTOM_DECK_KEY) || 'null');
+      if(saved && Array.isArray(saved.cards)) setDeckPublic(saved, (saved.meta && saved.meta.source) || 'Custom deck', false);
+    }catch(err){ console.warn('Custom deck ignored', err); }
+    ensureDeckSourceUI();
+    refreshDeckSourceUI();
+  }
+  function openSettingsPublic(){
+    ['home','solo','domain','review','gameplayHub351'].forEach(id => $p(id)?.classList.add('hidden'));
+    $p('settings')?.classList.remove('hidden');
+    try{ mode = 'settings'; paused = true; }catch(_){}
+    ensureDeckSourceUI();
+    refreshDeckSourceUI();
+  }
+  document.addEventListener('click', e => {
+    const settingsTrigger = e.target && e.target.closest && e.target.closest('#settingsBtn,#gearBtn');
+    if(settingsTrigger){
+      [0, 80, 250].forEach(delay => setTimeout(openSettingsPublic, delay));
+    }
+    if(e.target && e.target.closest && e.target.closest('#settingsBtn,#gearBtn,#openSettings351,#openImport351')) setTimeout(ensureDeckSourceUI, 0);
+  }, true);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootPublicDeckSource);
+  else bootPublicDeckSource();
+  setTimeout(bootPublicDeckSource, 500);
+  setInterval(() => { ensureDeckSourceUI(); sanitizeSystemSelectsPublic(); refreshDeckSourceUI(); }, 1500);
 })();
 </script>
 </body></html>
