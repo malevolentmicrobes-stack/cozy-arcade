@@ -1,0 +1,156 @@
+====================================================
+COZY ARCADE BOARD PREP — CARD DATABASE JSON SCHEMA
+Example: MGH Whitebook APKG Reddit Import Format
+Schema Version: v17_source_truth_append_only
+Export Date: 2026-05-16
+====================================================
+
+PURPOSE
+-------
+Simple reference for any AI or dev to understand the card JSON structure.
+Use this to build importers, validators, or new card sources.
+
+
+TOP-LEVEL STRUCTURE
+-------------------
+{
+  "meta": { ... },       ← one object, describes the whole file
+  "cards": [ ... ]       ← array of card objects
+}
+
+
+META BLOCK (required fields)
+-----------------------------
+"export_date"          → "YYYY-MM-DD"
+"json_schema_version"  → "v17_source_truth_append_only"
+"bundle_namespace"     → "cards"
+"total_cards"          → integer
+"source_file"          → original filename
+"card_id_note"         → normalization note for card identity fields
+
+
+CARD OBJECT — FIELD REFERENCE
+------------------------------
+
+--- STABLE IDENTITY (all point to the same card) ---
+"card_id"          → string version of json_id (e.g. "1")
+"json_id"          → integer, primary key for DB upsert
+"qid_unique"       → string, unique question ID (e.g. "APKG-99-001")
+"original_qid"     → string, original source ID (Anki note ID, AMBOSS ID, etc.)
+"qid"              → string, display QID
+
+--- CLASSIFICATION ---
+"test"             → string, e.g. "TEST 1", "MGH WHITEBOOK APKG FIRST 99"
+"sys"              → string, organ system, e.g. "RENAL", "CV", "MGH"
+"diagnosis"        → string, primary diagnosis or topic
+
+--- CONTENT LAYERS (Progressive Disclosure Model) ---
+"presentation"           → Level 0: raw stem / question text
+"clinical_vignette"      → Level 0b: vignette summary (Age·Hx·Sx·Exam·Labs)
+"level_1_presentation"   → Level 1: one-liner presentation
+"level_2_three_second"   → Level 2: 3-second recall answer
+"level_3_quick_recall"   → Level 3a: quick recall
+"level_3_treatment"      → Level 3b: treatment
+"level_3_next_step"      → Level 3c: next step
+"level_4_full_card"      → Level 4: full structured card (all fields)
+
+--- ANSWER & EXPLANATION ---
+"answer"                 → correct answer text
+"educational_objective"  → learning objective
+"board_trigger"          → IF → THINK → DO pattern
+"why_not_others"         → ✗ distractor explanations
+
+--- METADATA ---
+"tags"             → comma-separated string of tags
+"pins"             → pinned note (nullable)
+"rev_data"         → revision/spaced-repetition data (nullable)
+"cloze_source_text"→ original cloze front text
+"cloze_enabled"    → "Y" if cloze card, null if not
+"image_url"        → URL string or null
+
+--- SCHEMA & PROVENANCE ---
+"bundle_namespace"     → "cards" (always)
+"updated_at"           → ISO timestamp, e.g. "2026-05-10T02:55:22Z"
+"json_schema_version"  → "v17_source_truth_append_only"
+"source_truth_status"  → lock status string
+"source_sheet"         → source worksheet or dataset name
+"source_row"           → integer row in source
+
+--- APKG-SPECIFIC FIELDS (prefix: _apkg_) ---
+"_apkg_front"          → raw Anki front field
+"_apkg_back"           → raw Anki back field
+"_apkg_is_cloze"       → boolean
+"_apkg_cloze_answers"  → array of cloze answers or null
+"_apkg_patch_version"  → patch version string
+
+
+MINIMAL CARD EXAMPLE (new source / Reddit-style import)
+--------------------------------------------------------
+{
+  "card_id": "1",
+  "json_id": 1,
+  "qid_unique": "REDDIT-001",
+  "original_qid": null,
+  "qid": "REDDIT-001",
+  "test": "REDDIT COMMUNITY CARDS",
+  "sys": "CV",
+  "diagnosis": "Aortic stenosis",
+  "presentation": "Elderly man with exertional syncope, crescendo-decrescendo murmur at RUSB...",
+  "clinical_vignette": null,
+  "level_1_presentation": "Exertional syncope + harsh systolic murmur → aortic stenosis",
+  "level_2_three_second": "Aortic stenosis",
+  "level_3_quick_recall": "AS triad: angina, syncope, CHF",
+  "level_3_treatment": "Severe symptomatic AS → TAVR or surgical AVR",
+  "level_3_next_step": "Echo to confirm gradient",
+  "level_4_full_card": null,
+  "answer": "Aortic stenosis",
+  "educational_objective": "Aortic stenosis presents with exertional angina, syncope, and heart failure. Severe symptomatic AS requires valve replacement.",
+  "board_trigger": "IF exertional syncope + crescendo-decrescendo murmur → AS → Echo → AVR/TAVR",
+  "why_not_others": null,
+  "tags": "CV, syncope, murmur",
+  "pins": null,
+  "rev_data": null,
+  "cloze_source_text": null,
+  "cloze_enabled": null,
+  "image_url": null,
+  "bundle_namespace": "cards",
+  "updated_at": "2026-05-16",
+  "json_schema_version": "v17_source_truth_append_only",
+  "source_truth_status": "COMMUNITY IMPORT",
+  "source_sheet": "Reddit Community Cards",
+  "source_row": 1
+}
+
+
+UPSERT KEY FOR SUPABASE
+------------------------
+Use json_id OR qid_unique as the conflict/upsert key.
+Both must be unique within a bundle_namespace.
+
+
+NULL RULES
+----------
+- Use JSON null (not empty string "") for missing fields
+- Empty arrays [] → null
+- Whitespace-only strings → null
+
+
+IDENTITY NORMALIZATION NOTE (patched 2026-05-16)
+-------------------------------------------------
+card_id / json_id / qid_unique / original_qid / qid
+all normalize into stable card identity fields.
+Static validation: all HTML scripts parse correctly.
+ABIM1_412 → 412 normalized cards
+ABIM413_1250 → 837 normalized cards
+
+
+FILES IN THIS EXPORT SERIES
+-----------------------------
+ABIM_DATABASE_v17_upload.json          → 1,249 ABIM cards (TEST 1-100+)
+MGH_WHITEBOOK_APKG_v17_upload.json     → 99 MGH Whitebook APKG cards
+ABIM_JSON_SCHEMA_REFERENCE.txt         → this file
+
+
+====================================================
+END OF SCHEMA REFERENCE
+====================================================
